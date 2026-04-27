@@ -1,1 +1,141 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حماية متقدمة - منع التصوير</title>
+    <style>
+        body {
+            background-color: #111;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
+        /* حاوية الصورة */
+        .container {
+            position: relative;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .main-img {
+            width: 100%;
+            display: block;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        /* شريطة التحذير - مخفية في البداية */
+        #warning-banner {
+            position: fixed;
+            top: -100px; /* مخفية فوق */
+            left: 0;
+            width: 100%;
+            background: #ff0000;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 9999;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            transition: top 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        /* الطبقة السوداء اللي بتغطي الصورة */
+        #blocker {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            display: none; /* مخفية */
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            color: yellow;
+            font-size: 20px;
+            text-align: center;
+            border-radius: 8px;
+        }
+
+        /* حالة التفعيل (لما يحاول يصور) */
+        .active-warning #warning-banner {
+            top: 0; /* تظهر الشريطة */
+        }
+        .active-warning #blocker {
+            display: flex; /* تظهر الطبقة السوداء */
+        }
+        .active-warning .main-img {
+            filter: blur(50px); /* الصورة تتغلوش جداً */
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <!-- شريطة التحذير -->
+    <div id="warning-banner">⚠️ تحذير: محاولة تصوير الشاشة ممنوعة! حقوق الملكية محفوظة.</div>
+
+    <div class="container" id="guard">
+        <div id="blocker">محتوى محمي - لا يمكن العرض أثناء التصوير</div>
+        <!-- حط رابط صورتك هنا -->
+        <img src="02f31951-f4c0-4eda-a2c0-37ec3bb6b926.jpg" class="main-img" id="myImage">
+    </div>
+
+<script>
+    const body = document.body;
+    const warning = document.getElementById('warning-banner');
+
+    function activateProtection() {
+        body.classList.add('active-warning');
+        // الشريطة هتختفي لوحدها بعد 3 ثواني لو رجع للصفحة
+        setTimeout(() => {
+            if (document.hasFocus()) {
+                deactivateProtection();
+            }
+        }, 3000);
+    }
+
+    function deactivateProtection() {
+        body.classList.remove('active-warning');
+    }
+
+    // 1. اكتشاف زرار Print Screen
+    document.addEventListener('keyup', (e) => {
+        if (e.key === 'PrintScreen' || e.keyCode === 44) {
+            navigator.clipboard.writeText("ممنوع السرقة!"); // بيمسح اللي خده سكرين من الحافظة
+            activateProtection();
+        }
+    });
+
+    // 2. اكتشاف لو خرج من الصفحة (مثلاً فتح Snipping Tool)
+    window.addEventListener('blur', () => {
+        activateProtection();
+    });
+
+    // 3. لما يرجع يركز في الصفحة
+    window.addEventListener('focus', () => {
+        // بنسيب التحذير ثانية عشان يحس بالذنب وبعدين نشيله
+        setTimeout(deactivateProtection, 1000);
+    });
+
+    // 4. منع اختصارات التصوير المشهورة (Ctrl+P, Ctrl+S)
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && (e.key === 'p' || e.key === 's' || e.key === 'u')) {
+            e.preventDefault();
+            activateProtection();
+        }
+    });
+
+    // حركة إضافية: لو الماوس خرج برا منطقة الصورة
+    document.getElementById('guard').addEventListener('mouseleave', () => {
+        // اختياري: ممكن تشغل الحماية هنا كمان
+    });
+
+</script>
+
+</body>
+</html>
