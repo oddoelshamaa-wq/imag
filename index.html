@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المعرض المحمي - جودة عالية</title>
+    <style>
+        body { 
+            background: #0a0a0a; 
+            margin: 0;
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            user-select: none; /* منع تحديد النصوص */
+            -webkit-user-select: none;
+        }
+        
+        /* الحاوية الرئيسية */
+        .secure-wrapper {
+            position: relative;
+            width: 80vw; /* عرض مرن */
+            max-width: 800px;
+            height: 500px;
+            cursor: none; 
+            border: 3px solid #333;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            background-color: #000;
+            overflow: hidden;
+        }
+
+        /* طبقة الصورة - تحسين الجودة */
+        #image-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: contain; /* لضمان ظهور الصورة كاملة وبأفضل جودة */
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 1;
+            transition: background-image 0.5s ease-in-out; /* حركة ناعمة عند التغيير */
+        }
+
+        /* العلامة المائية المتحركة */
+        #follower {
+            position: absolute;
+            padding: 8px 15px;
+            background: rgba(255, 0, 0, 0.5);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 100;
+            transform: translate(-50%, -50%);
+            border: 1px solid red;
+            white-space: nowrap;
+            border-radius: 4px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* شبكة العلامات المائية الثابتة */
+        .static-watermark {
+            position: absolute;
+            z-index: 50;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            opacity: 0.15;
+            pointer-events: none;
+        }
+        .static-watermark span {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 20px;
+            transform: rotate(-45deg);
+        }
+
+        /* أزرار التحكم */
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 200;
+        }
+        button {
+            padding: 10px 25px;
+            background: #c00;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        button:hover { background: #f00; }
+        button:disabled { background: #444; cursor: not-allowed; }
+
+        .counter {
+            color: #888;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;"> <!-- منع القائمة اليمين -->
+
+<div class="secure-wrapper" id="box">
+    <!-- العلامة المائية التي تتبع الماوس -->
+    <div id="follower">نسخة محمية - ملك لـ [اسمك]</div>
+    
+    <!-- علامات مائية متكررة -->
+    <div class="static-watermark">
+        <span>COPYRIGHT</span><span>COPYRIGHT</span><span>COPYRIGHT</span>
+        <span>COPYRIGHT</span><span>COPYRIGHT</span><span>COPYRIGHT</span>
+        <span>COPYRIGHT</span><span>COPYRIGHT</span><span>COPYRIGHT</span>
+    </div>
+
+    <!-- طبقة الصورة -->
+    <div id="image-layer"></div>
+</div>
+
+<div class="counter" id="img-counter">صورة 1 من 3</div>
+
+<div class="controls">
+    <button onclick="prevImg()">السابق</button>
+    <button onclick="nextImg()">التالي</button>
+</div>
+
+<script>
+    // قائمة الصور الخاصة بك (ضع روابط الصور هنا)
+    const images = [
+        '02f31951-f4c0-4eda-a2c0-37ec3bb6b926.JPG',
+        'image2.jpg', 
+        'image3.jpg'
+    ];
+
+    let currentIndex = 0;
+    const box = document.getElementById('box');
+    const imageLayer = document.getElementById('image-layer');
+    const follower = document.getElementById('follower');
+    const counterText = document.getElementById('img-counter');
+
+    // وظيفة تحديث الصورة
+    function updateDisplay() {
+        imageLayer.style.backgroundImage = `url('${images[currentIndex]}')`;
+        counterText.innerText = `صورة ${currentIndex + 1} من ${images.length}`;
+    }
+
+    // التنقل
+    function nextImg() {
+        currentIndex = (currentIndex + 1) % images.length;
+        updateDisplay();
+    }
+
+    function prevImg() {
+        currentIndex = (currentIndex - 1 + images.length) % images.length;
+        updateDisplay();
+    }
+
+    // حركة العلامة المائية
+    box.addEventListener('mousemove', (e) => {
+        const rect = box.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        follower.style.left = x + 'px';
+        follower.style.top = y + 'px';
+        follower.style.display = 'block';
+    });
+
+    box.addEventListener('mouseleave', () => {
+        follower.style.display = 'none';
+    });
+    
+    // تشغيل أول صورة عند التحميل
+    updateDisplay();
+
+    // منع اختصارات الكيبورد (مثل Ctrl+S و Ctrl+U)
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && (e.key === 'u' || e.key === 's' || e.key === 'p')) {
+            e.preventDefault();
+            alert('غير مسموح بالحفظ');
+        }
+    });
+</script>
+
+</body>
+</html>
