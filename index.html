@@ -2,140 +2,201 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حماية متقدمة - منع التصوير</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
+    <title>معرض الصور المحمي للموبايل</title>
     <style>
         body {
-            background-color: #111;
+            background-color: #0a0a0a;
+            color: white;
             margin: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
             overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-touch-callout: none;
         }
 
-        /* حاوية الصورة */
-        .container {
-            position: relative;
-            width: 90%;
-            max-width: 600px;
-        }
-
-        .main-img {
-            width: 100%;
-            display: block;
-            border-radius: 8px;
-            transition: 0.3s;
-        }
-
-        /* شريطة التحذير - مخفية في البداية */
-        #warning-banner {
+        /* شريطة التحذير */
+        #warning-strip {
             position: fixed;
-            top: -100px; /* مخفية فوق */
+            top: -100px;
             left: 0;
             width: 100%;
             background: #ff0000;
             color: white;
+            padding: 15px;
             text-align: center;
-            padding: 20px;
-            font-size: 24px;
             font-weight: bold;
-            z-index: 9999;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            transition: top 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 1000;
+            transition: 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045);
         }
 
-        /* الطبقة السوداء اللي بتغطي الصورة */
-        #blocker {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
-            display: none; /* مخفية */
-            z-index: 999;
+        .instruction {
+            margin-bottom: 15px;
+            color: #aaa;
+            font-size: 16px;
+        }
+
+        /* حاوية المعرض */
+        .gallery-container {
+            position: relative;
+            width: 90%;
+            max-width: 500px;
+            background: #111;
+            border: 2px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            touch-action: none; /* لمنع السكرول أثناء اللمس */
+        }
+
+        .image-view {
+            position: relative;
+            width: 100%;
+            height: 400px; /* يمكنك تعديل الارتفاع حسب صورك */
+            display: flex;
             justify-content: center;
             align-items: center;
-            color: yellow;
-            font-size: 20px;
-            text-align: center;
-            border-radius: 8px;
         }
 
-        /* حالة التفعيل (لما يحاول يصور) */
-        .active-warning #warning-banner {
-            top: 0; /* تظهر الشريطة */
+        .protected-img {
+            max-width: 100%;
+            max-height: 100%;
+            filter: blur(60px) brightness(0.1); /* غلوشة قوية جداً */
+            transition: filter 0.2s ease;
+            pointer-events: none;
         }
-        .active-warning #blocker {
-            display: flex; /* تظهر الطبقة السوداء */
+
+        /* نص "اضغط للعرض" */
+        .overlay-msg {
+            position: absolute;
+            font-weight: bold;
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            pointer-events: none;
+            border: 1px border #555;
         }
-        .active-warning .main-img {
-            filter: blur(50px); /* الصورة تتغلوش جداً */
+
+        /* أزرار التحكم */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 90%;
+            max-width: 500px;
+            margin-top: 20px;
+        }
+
+        button {
+            background: #222;
+            color: white;
+            border: 1px solid #444;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:active { background: #444; }
+
+        .counter { color: #888; font-size: 14px; }
+
+        /* تفعيل العرض */
+        .is-viewing .protected-img {
+            filter: blur(0px) brightness(1);
+        }
+        .is-viewing .overlay-msg {
+            display: none;
         }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-    <!-- شريطة التحذير -->
-    <div id="warning-banner">⚠️ تحذير: محاولة تصوير الشاشة ممنوعة! حقوق الملكية محفوظة.</div>
+    <div id="warning-strip">⚠️ ممنوع تصوير الشاشة! المحتوى محمي برمجياً.</div>
 
-    <div class="container" id="guard">
-        <div id="blocker">محتوى محمي - لا يمكن العرض أثناء التصوير</div>
-        <!-- حط رابط صورتك هنا -->
-        <img src="02f31951-f4c0-4eda-a2c0-37ec3bb6b926.jpg" class="main-img" id="myImage">
+    <div class="instruction">اضغط مطولاً على الصورة لعرضها بوضوح</div>
+
+    <div class="gallery-container" id="galleryBox">
+        <div class="image-view" id="touchArea">
+            <div class="overlay-msg">إلمس هنا للمعاينة</div>
+            <img src="" class="protected-img" id="displayImg">
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="prevImg()">السابق</button>
+        <span class="counter" id="imgCounter">صورة 1 من 3</span>
+        <button onclick="nextImg()">التالي</button>
     </div>
 
 <script>
-    const body = document.body;
-    const warning = document.getElementById('warning-banner');
+    // 1. قائمة الصور الخاصة بك (أضف الروابط هنا)
+    const images = [
+        '02f31951-f4c0-4eda-a2c0-37ec3bb6b926.jpg',
+        '4709ec03-9528-4d20-a416-2ba9e6832fca.jpg',
+        '9471537d-8d94-4841-bb65-2c370ac89dfd.jpg'
+        
+    ];
 
-    function activateProtection() {
-        body.classList.add('active-warning');
-        // الشريطة هتختفي لوحدها بعد 3 ثواني لو رجع للصفحة
-        setTimeout(() => {
-            if (document.hasFocus()) {
-                deactivateProtection();
-            }
-        }, 3000);
+    let currentIndex = 0;
+    const displayImg = document.getElementById('displayImg');
+    const touchArea = document.getElementById('touchArea');
+    const imgCounter = document.getElementById('imgCounter');
+    const warning = document.getElementById('warning-strip');
+
+    // تحديث المعرض
+    function updateGallery() {
+        displayImg.src = images[currentIndex];
+        imgCounter.innerText = `صورة ${currentIndex + 1} من ${images.length}`;
     }
 
-    function deactivateProtection() {
-        body.classList.remove('active-warning');
+    function nextImg() {
+        currentIndex = (currentIndex + 1) % images.length;
+        updateGallery();
     }
 
-    // 1. اكتشاف زرار Print Screen
-    document.addEventListener('keyup', (e) => {
-        if (e.key === 'PrintScreen' || e.keyCode === 44) {
-            navigator.clipboard.writeText("ممنوع السرقة!"); // بيمسح اللي خده سكرين من الحافظة
-            activateProtection();
-        }
-    });
+    function prevImg() {
+        currentIndex = (currentIndex - 1 + images.length) % images.length;
+        updateGallery();
+    }
 
-    // 2. اكتشاف لو خرج من الصفحة (مثلاً فتح Snipping Tool)
+    // أخذ حالة العرض
+    const show = () => touchArea.classList.add('is-viewing');
+    const hide = () => touchArea.classList.remove('is-viewing');
+
+    // أحداث اللمس للموبايل
+    touchArea.addEventListener('touchstart', (e) => { e.preventDefault(); show(); });
+    touchArea.addEventListener('touchend', hide);
+    touchArea.addEventListener('touchcancel', hide);
+
+    // أحداث الماوس للكمبيوتر
+    touchArea.addEventListener('mousedown', show);
+    touchArea.addEventListener('mouseup', hide);
+    touchArea.addEventListener('mouseleave', hide);
+
+    // كشف السكرين شوت (عند فقدان التركيز)
     window.addEventListener('blur', () => {
-        activateProtection();
+        hide();
+        warning.style.top = "0";
+        setTimeout(() => { warning.style.top = "-100px"; }, 3500);
     });
 
-    // 3. لما يرجع يركز في الصفحة
-    window.addEventListener('focus', () => {
-        // بنسيب التحذير ثانية عشان يحس بالذنب وبعدين نشيله
-        setTimeout(deactivateProtection, 1000);
-    });
-
-    // 4. منع اختصارات التصوير المشهورة (Ctrl+P, Ctrl+S)
+    // منع الاختصارات
     document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && (e.key === 'p' || e.key === 's' || e.key === 'u')) {
+        if (e.key === 'PrintScreen' || (e.ctrlKey && e.key === 'p') || (e.ctrlKey && e.key === 's')) {
             e.preventDefault();
-            activateProtection();
+            hide();
+            alert('تصوير الشاشة معطل لهذا المحتوى');
         }
     });
 
-    // حركة إضافية: لو الماوس خرج برا منطقة الصورة
-    document.getElementById('guard').addEventListener('mouseleave', () => {
-        // اختياري: ممكن تشغل الحماية هنا كمان
-    });
+    // تشغيل المعرض عند التحميل
+    updateGallery();
 
 </script>
-
 </body>
 </html>
