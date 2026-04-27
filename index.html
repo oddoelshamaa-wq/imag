@@ -3,189 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>المعرض المحمي - جودة عالية</title>
+    <title>المعرض المحمي ضد السرقات</title>
     <style>
-        body { 
-            background: #0a0a0a; 
+        body {
+            background-color: #1a1a1a;
             margin: 0;
-            display: flex; 
-            flex-direction: column;
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-            user-select: none; /* منع تحديد النصوص */
-            -webkit-user-select: none;
-        }
-        
-        /* الحاوية الرئيسية */
-        .secure-wrapper {
-            position: relative;
-            width: 80vw; /* عرض مرن */
-            max-width: 800px;
-            height: 500px;
-            cursor: none; 
-            border: 3px solid #333;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            background-color: #000;
-            overflow: hidden;
-        }
-
-        /* طبقة الصورة - تحسين الجودة */
-        #image-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-size: contain; /* لضمان ظهور الصورة كاملة وبأفضل جودة */
-            background-position: center;
-            background-repeat: no-repeat;
-            z-index: 1;
-            transition: background-image 0.5s ease-in-out; /* حركة ناعمة عند التغيير */
-        }
-
-        /* العلامة المائية المتحركة */
-        #follower {
-            position: absolute;
-            padding: 8px 15px;
-            background: rgba(255, 0, 0, 0.5);
-            color: white;
-            font-size: 14px;
-            font-weight: bold;
-            pointer-events: none;
-            z-index: 100;
-            transform: translate(-50%, -50%);
-            border: 1px solid red;
-            white-space: nowrap;
-            border-radius: 4px;
-            text-shadow: 1px 1px 2px black;
-        }
-
-        /* شبكة العلامات المائية الثابتة */
-        .static-watermark {
-            position: absolute;
-            z-index: 50;
-            width: 100%;
-            height: 100%;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            opacity: 0.15;
-            pointer-events: none;
-        }
-        .static-watermark span {
             display: flex;
             justify-content: center;
             align-items: center;
-            color: white;
-            font-size: 20px;
-            transform: rotate(-45deg);
+            height: 100vh;
+            overflow: hidden;
+            font-family: sans-serif;
+            user-select: none; /* منع التحديد */
+            -webkit-user-select: none;
         }
 
-        /* أزرار التحكم */
-        .controls {
-            margin-top: 20px;
+        /* الحاوية الرئيسية */
+        .image-container {
+            position: relative;
+            width: 80%;
+            max-width: 700px;
+            border: 5px solid #333;
+            box-shadow: 0 0 30px rgba(0,0,0,0.7);
+            background: #000;
+            transition: filter 0.3s ease; /* تأثير الغلوشة */
+        }
+
+        /* طبقة الصورة الأصلية */
+        .main-image {
+            display: block;
+            width: 100%;
+            pointer-events: none; /* منع التعامل مع الصورة مباشرة */
+        }
+
+        /* الخدعة: الطبقة الشفافة العازلة */
+        .overlay-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            cursor: not-allowed;
+            background: rgba(255, 255, 255, 0); /* شفافة تماماً */
+        }
+
+        /* العلامة المائية الثابتة */
+        .watermark-grid {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0.2;
+        }
+        .watermark-grid span {
+            color: #fff;
             display: flex;
-            gap: 15px;
-            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            transform: rotate(-45deg);
+            font-size: 14px;
         }
-        button {
-            padding: 10px 25px;
-            background: #c00;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            border-radius: 5px;
-            transition: 0.3s;
-        }
-        button:hover { background: #f00; }
-        button:disabled { background: #444; cursor: not-allowed; }
 
-        .counter {
-            color: #888;
-            margin-top: 10px;
+        /* تأثير الغلوشة (Blur) */
+        .protected-blur {
+            filter: blur(40px) grayscale(100%);
+        }
+
+        /* رسالة تحذير تظهر عند الغلوشة */
+        .warning-msg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            background: rgba(255, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 100;
+            font-weight: bold;
         }
     </style>
 </head>
-<body oncontextmenu="return false;"> <!-- منع القائمة اليمين -->
+<body oncontextmenu="return false;">
 
-<div class="secure-wrapper" id="box">
-    <!-- العلامة المائية التي تتبع الماوس -->
-    <div id="follower">نسخة محمية - ملك لـ [اسمك]</div>
+<div class="image-container" id="secureBox">
+    <div class="warning-msg" id="warning">ممنوع التصوير أو الخروج من الصفحة!</div>
     
-    <!-- علامات مائية متكررة -->
-    <div class="static-watermark">
-        <span>COPYRIGHT</span><span>COPYRIGHT</span><span>COPYRIGHT</span>
-        <span>COPYRIGHT</span><span>COPYRIGHT</span><span>COPYRIGHT</span>
-        <span>COPYRIGHT</span><span>COPYRIGHT</span><span>COPYRIGHT</span>
+    <!-- الطبقة العازلة -->
+    <div class="overlay-layer"></div>
+    
+    <!-- شبكة علامات مائية -->
+    <div class="watermark-grid">
+        <span>PROPERTY OF [YOUR NAME]</span><span>PROPERTY OF [YOUR NAME]</span><span>PROPERTY OF [YOUR NAME]</span>
+        <span>PROPERTY OF [YOUR NAME]</span><span>PROPERTY OF [YOUR NAME]</span><span>PROPERTY OF [YOUR NAME]</span>
     </div>
 
-    <!-- طبقة الصورة -->
-    <div id="image-layer"></div>
-</div>
-
-<div class="counter" id="img-counter">صورة 1 من 3</div>
-
-<div class="controls">
-    <button onclick="prevImg()">السابق</button>
-    <button onclick="nextImg()">التالي</button>
+    <!-- الصورة المراد حمايتها -->
+    <!-- استبدل الرابط برابط صورتك -->
+    <img src="02f31951-f4c0-4eda-a2c0-37ec3bb6b926.jpg" alt="Protected" class="main-image" id="targetImage">
 </div>
 
 <script>
-    // قائمة الصور الخاصة بك (ضع روابط الصور هنا)
-    const images = [
-        '02f31951-f4c0-4eda-a2c0-37ec3bb6b926.jpg',
-        'image2.jpg', 
-        'image3.jpg'
-    ];
+    const box = document.getElementById('secureBox');
+    const warning = document.getElementById('warning');
 
-    let currentIndex = 0;
-    const box = document.getElementById('box');
-    const imageLayer = document.getElementById('image-layer');
-    const follower = document.getElementById('follower');
-    const counterText = document.getElementById('img-counter');
-
-    // وظيفة تحديث الصورة
-    function updateDisplay() {
-        imageLayer.style.backgroundImage = `url('${images[currentIndex]}')`;
-        counterText.innerText = `صورة ${currentIndex + 1} من ${images.length}`;
-    }
-
-    // التنقل
-    function nextImg() {
-        currentIndex = (currentIndex + 1) % images.length;
-        updateDisplay();
-    }
-
-    function prevImg() {
-        currentIndex = (currentIndex - 1 + images.length) % images.length;
-        updateDisplay();
-    }
-
-    // حركة العلامة المائية
-    box.addEventListener('mousemove', (e) => {
-        const rect = box.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        follower.style.left = x + 'px';
-        follower.style.top = y + 'px';
-        follower.style.display = 'block';
+    // 1. خدعة الغلوشة عند فقدان التركيز (أهم خدعة ضد برامج السكرين شوت)
+    window.addEventListener('blur', () => {
+        box.classList.add('protected-blur');
+        warning.style.display = 'block';
     });
 
-    box.addEventListener('mouseleave', () => {
-        follower.style.display = 'none';
+    window.addEventListener('focus', () => {
+        box.classList.remove('protected-blur');
+        warning.style.display = 'none';
     });
-    
-    // تشغيل أول صورة عند التحميل
-    updateDisplay();
 
-    // منع اختصارات الكيبورد (مثل Ctrl+S و Ctrl+U)
+    // 2. منع اختصارات لوحة المفاتيح
     document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && (e.key === 'u' || e.key === 's' || e.key === 'p')) {
+        // منع F12, Ctrl+Shift+I, Ctrl+U, Ctrl+S, Ctrl+P
+        if (
+            e.keyCode === 123 || 
+            (e.ctrlKey && e.shiftKey && e.keyCode === 73) || 
+            (e.ctrlKey && e.keyCode === 85) || 
+            (e.ctrlKey && e.keyCode === 83) || 
+            (e.ctrlKey && e.keyCode === 80)
+        ) {
             e.preventDefault();
-            alert('غير مسموح بالحفظ');
+            alert('عذراً.. الحماية مفعلة!');
+            return false;
         }
     });
+
+    // 3. منع سحب الصورة (Drag and Drop)
+    document.addEventListener('dragstart', (e) => e.preventDefault());
+
+    // 4. خدعة إضافية: لو فتح الـ Console المتصفح هيمسح المحتوى (اختياري)
+    setInterval(() => {
+        if(window.outerHeight - window.innerHeight > 200 || window.outerWidth - window.innerWidth > 200) {
+            document.body.innerHTML = "<h1>تم اكتشاف محاولة سرقة!</h1>";
+        }
+    }, 1000);
 </script>
 
 </body>
