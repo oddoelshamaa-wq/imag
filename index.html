@@ -2,201 +2,212 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
-    <title>معرض الصور المحمي للموبايل</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>معرض الصور المحمي</title>
     <style>
         body {
-            background-color: #0a0a0a;
-            color: white;
+            background-color: #000;
+            color: #fff;
             margin: 0;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            height: 100vh;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
+            justify-content: center;
+            font-family: sans-serif;
             overflow: hidden;
-            -webkit-touch-callout: none;
+            user-select: none;
         }
 
-        /* شريطة التحذير */
-        #warning-strip {
-            position: fixed;
-            top: -100px;
-            left: 0;
-            width: 100%;
-            background: #ff0000;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            font-weight: bold;
-            z-index: 1000;
-            transition: 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045);
-        }
-
-        .instruction {
-            margin-bottom: 15px;
-            color: #aaa;
-            font-size: 16px;
-        }
-
-        /* حاوية المعرض */
-        .gallery-container {
+        /* حاوية الصورة */
+        .image-container {
             position: relative;
-            width: 90%;
-            max-width: 500px;
+            width: 95vw;
+            height: 60vh;
+            border: 1px solid #333;
             background: #111;
-            border: 2px solid #333;
-            border-radius: 10px;
-            overflow: hidden;
-            touch-action: none; /* لمنع السكرول أثناء اللمس */
-        }
-
-        .image-view {
-            position: relative;
-            width: 100%;
-            height: 400px; /* يمكنك تعديل الارتفاع حسب صورك */
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
 
-        .protected-img {
+        #protectedImg {
             max-width: 100%;
             max-height: 100%;
-            filter: blur(60px) brightness(0.1); /* غلوشة قوية جداً */
-            transition: filter 0.2s ease;
+            display: none; /* مخفية افتراضياً */
             pointer-events: none;
         }
 
-        /* نص "اضغط للعرض" */
-        .overlay-msg {
+        /* نقاط اللمس */
+        .touch-point {
             position: absolute;
-            font-weight: bold;
-            color: #fff;
-            background: rgba(255,255,255,0.1);
-            padding: 10px 20px;
-            border-radius: 20px;
-            pointer-events: none;
-            border: 1px border #555;
-        }
-
-        /* أزرار التحكم */
-        .controls {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px dashed #fff;
+            border-radius: 50%;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            width: 90%;
-            max-width: 500px;
-            margin-top: 20px;
+            font-size: 10px;
+            z-index: 10;
+            transition: background 0.3s;
         }
 
-        button {
-            background: #222;
-            color: white;
-            border: 1px solid #444;
-            padding: 12px 25px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
+        .point-1 { top: 10px; right: 10px; }
+        .point-2 { bottom: 10px; left: 10px; }
+
+        .active-point { background: rgba(0, 255, 0, 0.4) !important; }
+
+        /* رسالة التعليمات */
+        #msg {
+            position: absolute;
+            text-align: center;
+            color: #888;
         }
 
-        button:active { background: #444; }
-
-        .counter { color: #888; font-size: 14px; }
-
-        /* تفعيل العرض */
-        .is-viewing .protected-img {
-            filter: blur(0px) brightness(1);
-        }
-        .is-viewing .overlay-msg {
+        /* علامة مائية متحركة لتخريب السكرين شوت */
+        .watermark {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
             display: none;
+            z-index: 5;
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 50px);
+        }
+
+        .user-tag {
+            position: absolute;
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+            white-space: nowrap;
+        }
+
+        .controls { margin-top: 30px; display: flex; gap: 20px; }
+        button { padding: 10px 20px; background: #222; color: #fff; border: 1px solid #444; border-radius: 5px; }
+
+        /* حالة السكرين شوت المكتشفة */
+        #warning {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: red; color: white;
+            display: none; justify-content: center; align-items: center;
+            font-size: 24px; font-weight: bold; z-index: 9999;
         }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-    <div id="warning-strip">⚠️ ممنوع تصوير الشاشة! المحتوى محمي برمجياً.</div>
+    <div id="warning">⚠️ تم رصد محاولة تصوير!</div>
 
-    <div class="instruction">اضغط مطولاً على الصورة لعرضها بوضوح</div>
+    <div style="margin-bottom: 10px; font-size: 14px; color: #ffeb3b;">
+        للعرض: ضع إصبعك الأول على (1) والثاني على (2) معاً
+    </div>
 
-    <div class="gallery-container" id="galleryBox">
-        <div class="image-view" id="touchArea">
-            <div class="overlay-msg">إلمس هنا للمعاينة</div>
-            <img src="" class="protected-img" id="displayImg">
-        </div>
+    <div class="image-container" id="box">
+        <div id="msg">الصورة محمية.. استخدم اللمس المزدوج</div>
+        
+        <div class="touch-point point-1" id="p1">1</div>
+        <div class="touch-point point-2" id="p2">2</div>
+
+        <img src="" id="protectedImg">
+        <div class="watermark" id="wm"></div>
     </div>
 
     <div class="controls">
-        <button onclick="prevImg()">السابق</button>
-        <span class="counter" id="imgCounter">صورة 1 من 3</span>
-        <button onclick="nextImg()">التالي</button>
+        <button onclick="changeImg(-1)">السابق</button>
+        <button onclick="changeImg(1)">التالي</button>
     </div>
 
-<script>
-    // 1. قائمة الصور الخاصة بك (أضف الروابط هنا)
-    const images = [
-        '02f31951-f4c0-4eda-a2c0-37ec3bb6b926.jpg',
-        '4709ec03-9528-4d20-a416-2ba9e6832fca.jpg',
-        '9471537d-8d94-4841-bb65-2c370ac89dfd.jpg',
-        '02ea532c-f58e-4300-bb72-258f0366e0e1.jpg',
-    ];
+    <script>
+        const images = [
+            '02ea532c-f58e-4300-bb72-258f0366e0e1.jpg',
+            '9471537d-8d94-4841-bb65-2c370ac89dfd.jpg',
+            '4709ec03-9528-4d20-a416-2ba9e6832fca.jpg',
+             '02f31951-f4c0-4eda-a2c0-37ec3bb6b926.jpg'
+        ];
+        let current = 0;
 
-    let currentIndex = 0;
-    const displayImg = document.getElementById('displayImg');
-    const touchArea = document.getElementById('touchArea');
-    const imgCounter = document.getElementById('imgCounter');
-    const warning = document.getElementById('warning-strip');
+        const img = document.getElementById('protectedImg');
+        const p1 = document.getElementById('p1');
+        const p2 = document.getElementById('p2');
+        const wm = document.getElementById('wm');
+        const warning = document.getElementById('warning');
 
-    // تحديث المعرض
-    function updateGallery() {
-        displayImg.src = images[currentIndex];
-        imgCounter.innerText = `صورة ${currentIndex + 1} من ${images.length}`;
-    }
+        let isP1Active = false;
+        let isP2Active = false;
 
-    function nextImg() {
-        currentIndex = (currentIndex + 1) % images.length;
-        updateGallery();
-    }
-
-    function prevImg() {
-        currentIndex = (currentIndex - 1 + images.length) % images.length;
-        updateGallery();
-    }
-
-    // أخذ حالة العرض
-    const show = () => touchArea.classList.add('is-viewing');
-    const hide = () => touchArea.classList.remove('is-viewing');
-
-    // أحداث اللمس للموبايل
-    touchArea.addEventListener('touchstart', (e) => { e.preventDefault(); show(); });
-    touchArea.addEventListener('touchend', hide);
-    touchArea.addEventListener('touchcancel', hide);
-
-    // أحداث الماوس للكمبيوتر
-    touchArea.addEventListener('mousedown', show);
-    touchArea.addEventListener('mouseup', hide);
-    touchArea.addEventListener('mouseleave', hide);
-
-    // كشف السكرين شوت (عند فقدان التركيز)
-    window.addEventListener('blur', () => {
-        hide();
-        warning.style.top = "0";
-        setTimeout(() => { warning.style.top = "-100px"; }, 3500);
-    });
-
-    // منع الاختصارات
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'PrintScreen' || (e.ctrlKey && e.key === 'p') || (e.ctrlKey && e.key === 's')) {
-            e.preventDefault();
-            hide();
-            alert('تصوير الشاشة معطل لهذا المحتوى');
+        function updateState() {
+            if (isP1Active && isP2Active) {
+                img.style.display = 'block';
+                wm.style.display = 'block';
+            } else {
+                img.style.display = 'none';
+                wm.style.display = 'none';
+            }
         }
-    });
 
-    // تشغيل المعرض عند التحميل
-    updateGallery();
+        // دالة لتغيير الصور
+        function changeImg(dir) {
+            current = (current + dir + images.length) % images.length;
+            img.src = images[current];
+        }
+        changeImg(0);
 
-</script>
+        // التعامل مع اللمس
+        const handleTouch = (e) => {
+            isP1Active = false;
+            isP2Active = false;
+            p1.classList.remove('active-point');
+            p2.classList.remove('active-point');
+
+            for (let i = 0; i < e.touches.length; i++) {
+                const touch = e.touches[i];
+                const el = document.elementFromPoint(touch.clientX, touch.clientY);
+                
+                if (el === p1) { isP1Active = true; p1.classList.add('active-point'); }
+                if (el === p2) { isP2Active = true; p2.classList.add('active-point'); }
+            }
+            updateState();
+        };
+
+        window.addEventListener('touchstart', handleTouch);
+        window.addEventListener('touchmove', handleTouch);
+        window.addEventListener('touchend', () => {
+            isP1Active = false; isP2Active = false;
+            p1.classList.remove('active-point'); p2.classList.remove('active-point');
+            updateState();
+        });
+
+        // كشف الاسكرين شوت عن طريق مراقبة التركيز
+        window.onblur = function() {
+            img.style.display = 'none';
+            warning.style.display = 'flex';
+            setTimeout(() => { warning.style.display = 'none'; }, 2000);
+        };
+
+        // منع الأزرار والاختصارات
+        document.addEventListener('keydown', e => {
+            if (e.key === 'PrintScreen' || (e.ctrlKey && e.key === 'p')) {
+                e.preventDefault();
+                alert('المحتوى محمي!');
+            }
+        });
+
+        // توليد علامات مائية عشوائية
+        for(let i=0; i<20; i++) {
+            let span = document.createElement('span');
+            span.className = 'user-tag';
+            span.innerText = 'PRIVATE CONTENT - ' + new Date().toLocaleDateString();
+            span.style.top = Math.random() * 100 + '%';
+            span.style.left = Math.random() * 100 + '%';
+            wm.appendChild(span);
+        }
+
+    </script>
 </body>
 </html>
